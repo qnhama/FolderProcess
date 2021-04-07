@@ -28,17 +28,45 @@ namespace FolderProcces
 
             Console.WriteLine("2. ---- Proceso de Orden ----");
 
+            OrderedParallelQuery();
+
+            Console.WriteLine("¿Deseas acomodar mas archivos? Y / N");
+            var continuarOrder = Console.ReadLine();
+
+            while (!continuarOrder.Equals("N"))
+            {
+                OrderedParallelQuery();
+                Console.WriteLine("¿Deseas acomodar mas archivos? Y / N");
+                continuarOrder = Console.ReadLine();
+            }
+
+            Console.WriteLine("El proceso a finalizado");
+            System.Console.ReadLine();
+        
+        }
+
+        public static void OrderedParallelQuery()
+        {
+
             Console.WriteLine("Escriba la carpeta de origen");
 
             var sourceFolder = System.Console.ReadLine();
 
-            var txtFiles = Directory.EnumerateFiles(sourceFolder, "*.txt");
-            foreach (string currentFile in txtFiles)
+
+            try
             {
-                orderFiles(sourceFolder, currentFile);
+                var txtFiles = Directory.EnumerateFiles(sourceFolder, "*.txt");
+                foreach (string currentFile in txtFiles)
+                {
+                    orderFiles(sourceFolder, currentFile);
+                }
             }
-            Console.WriteLine("El proceso a finalizado");
-            System.Console.ReadLine();
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.InnerException);
+            }
+            
         }
 
         public static void writeMainProcces() 
