@@ -7,42 +7,84 @@ namespace FolderProcces
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            Console.WriteLine("1. ---- Crear archivos de lectura ----");
+            var selectMenu = "";
 
-            Console.WriteLine("¿Deseas crea archivos nuevos? Y / N");
-            var escribir = Console.ReadLine();
-            if (escribir.Equals("Y"))
-            {
-                writeMainProcces();
-                Console.WriteLine("¿Deseas escribir otro archivo? Y / N");
-                var continuar = Console.ReadLine();
-                while (!continuar.Equals("N"))
-                {
-                    writeMainProcces();
-                    Console.WriteLine("¿Deseas escribir otro archivo? Y / N");
-                    continuar = Console.ReadLine();
-                }
-            }
+            Console.WriteLine("1. ---- Crear archivos de lectura ----");
 
             Console.WriteLine("2. ---- Proceso de Orden ----");
 
-            OrderedParallelQuery();
+            Console.WriteLine("3. Crear txt con archivos no deseados");
 
-            Console.WriteLine("¿Deseas acomodar mas archivos? Y / N");
-            var continuarOrder = Console.ReadLine();
+            selectMenu = Console.ReadLine();
 
-            while (!continuarOrder.Equals("N"))
+            switch (selectMenu)
             {
-                OrderedParallelQuery();
-                Console.WriteLine("¿Deseas acomodar mas archivos? Y / N");
-                continuarOrder = Console.ReadLine();
+                case "1":
+
+                    writeMainProcces();
+                    Console.WriteLine("¿Deseas escribir otro archivo? Y / N");
+                    var continuar = Console.ReadLine();
+                    while (!continuar.Equals("N"))
+                    {
+                        writeMainProcces();
+                        Console.WriteLine("¿Deseas escribir otro archivo? Y / N");
+                        continuar = Console.ReadLine();
+                    }
+                    break;
+                case "2":
+                    OrderedParallelQuery();
+
+                    Console.WriteLine("¿Deseas acomodar mas archivos? Y / N");
+                    var continuarOrder = Console.ReadLine();
+
+                    while (!continuarOrder.Equals("N"))
+                    {
+                        OrderedParallelQuery();
+                        Console.WriteLine("¿Deseas acomodar mas archivos? Y / N");
+                        continuarOrder = Console.ReadLine();
+                    }
+
+                    Console.WriteLine("El proceso a finalizado");
+                    System.Console.ReadLine();
+
+                    break;
+                case "3":
+                    CreatTxtWithFilesDontWant();
+
+                    break;
+                default:
+                    break;
             }
 
-            Console.WriteLine("El proceso a finalizado");
-            System.Console.ReadLine();
-        
+
+            
+            
+            
+           
+
+        }
+
+        public static void CreatTxtWithFilesDontWant() {
+            Console.WriteLine("Escriba la carpeta de origen");
+
+            var sourceFolder = System.Console.ReadLine();
+
+            // Obtiene archvos
+
+            string pathRead = string.Format(@"{0}", sourceFolder);
+            var nameFile = "DeleteFiles";
+
+            var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
+
+            writeFileName(pathRead, pathFileTxt);
+
+
+            // Crea txt con el nombre de los archivos leidos
+
+
         }
 
         public static void OrderedParallelQuery()
@@ -105,6 +147,61 @@ namespace FolderProcces
 
         }
 
+        public static void writeFileName(string pathRead, string pathWrite)
+        {
+            Console.WriteLine("Iniciando prooceso de escritura txt de archivos no deseados");
+
+            string line;
+
+
+            if (!Directory.Exists(pathRead))
+            {
+                Console.WriteLine(string.Format("La direccion {0} no existe", pathRead));
+            }
+
+            // Lee Archivo delelete.txt existente 
+
+            var txtFiles = Directory.EnumerateFiles(pathRead, "*.txt").FirstOrDefault();
+
+            var pathFiletxt = System.IO.Path.Combine(pathRead);
+
+
+            // Read the file and display it line by line.  
+            System.IO.StreamReader file =
+                new System.IO.StreamReader(string.Format(@"{0}", pathFiletxt));
+
+            var dirRead = new List<string>();
+
+            while ((line = file.ReadLine()) != null)
+            {
+                System.Console.WriteLine(line);
+                dirRead.Add(line);
+            }
+
+            file.Close();
+
+            // Lee archivos existentes en la carpeta
+
+            string[] files = Directory.GetFiles(pathRead);
+
+            List<string> singleFilesNames = files.Select(x => Path.GetFileName(x)).ToList();
+
+            if (files.Length > 0)
+            {
+                Console.WriteLine(string.Format("se encontraron {0} archivos", singleFilesNames.Count()));
+
+                File.WriteAllLines(pathWrite, singleFilesNames);
+            }
+            else
+            {
+                Console.WriteLine("La carpeta esta vacia");
+
+                Console.ReadLine();
+            }
+
+
+        }
+
         public static void orderFiles(string sourceFolder, string sourceFile)
         {
 
@@ -142,8 +239,6 @@ namespace FolderProcces
 
             foreach (var phFolder in dirRead)
             {
-
-
 
                 string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", phFolder), SearchOption.TopDirectoryOnly);
 
