@@ -18,6 +18,8 @@ namespace FolderProcces
 
             Console.WriteLine("3. Crear txt con archivos no deseados");
 
+            Console.WriteLine("4. Elimina archivos no deseados que se encuentre en el txt Delete archivos");
+
             selectMenu = Console.ReadLine();
 
             switch (selectMenu)
@@ -55,16 +57,119 @@ namespace FolderProcces
                     CreatTxtWithFilesDontWant();
 
                     break;
+                case "4":
+                    DeleteFilesFromTxtFilesDontWant();
+
+                    break;
                 default:
                     break;
             }
 
 
-            
-            
-            
-           
 
+
+
+
+
+        }
+
+        public static void DeleteFilesFromTxtFilesDontWant()
+        {
+            Console.WriteLine("Escriba la carpeta de origen");
+
+            var sourceFolder = System.Console.ReadLine();
+
+            
+            try
+            {
+                string pathRead = string.Format(@"{0}", sourceFolder);
+                var nameFile = "DeleteFiles";
+
+                var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
+
+                DeleteFiles(sourceFolder, pathFileTxt);
+                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.InnerException);
+            }
+
+        }
+
+
+        public static void DeleteFiles(string sourceFolder, string sourceFile)
+        {
+
+            int counter = 0;
+            string line;
+
+            var pathFiletxt = System.IO.Path.Combine(sourceFile);
+
+            // Read the file and display it line by line.  
+            System.IO.StreamReader file =
+                new System.IO.StreamReader(string.Format(@"{0}", pathFiletxt));
+
+            var dirRead = new List<string>();
+
+            while ((line = file.ReadLine()) != null)
+            {
+                System.Console.WriteLine(line);
+                dirRead.Add(line);
+                counter++;
+            }
+
+            file.Close();
+            System.Console.WriteLine("Existe  {0} registros.", counter);
+
+
+            Console.WriteLine(string.Format("Buacando Archvos en la carpeta {0}", sourceFolder));
+
+            List<string> filesDelete = new List<string>();
+
+            foreach (var delete in dirRead)
+            {
+
+                string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", delete), SearchOption.TopDirectoryOnly);
+
+                if (files.Length > 0)
+                {
+                    filesDelete.AddRange(files);
+                }
+            }
+
+            Console.WriteLine(string.Format("Se encontraron {0}", filesDelete.Count()));
+
+            Console.WriteLine(string.Format("¿Estans seguro que quieres eliminar {0} archivos?", filesDelete.Count()));
+
+            Console.WriteLine("s/n");
+
+            var confirmDelete = Console.ReadLine();
+
+            if (confirmDelete.Equals("s"))
+            {
+                foreach (var dileDelete in filesDelete)
+                {
+                    string pathFile = string.Format(@"{0}", dileDelete);
+
+                    try
+                    {
+
+                        //System.IO.File.Copy(pathFile, destinationdirectory);
+                        System.IO.File.Delete(pathFile);
+                        //System.IO.File.Delete(pathFile);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    System.Console.WriteLine(pathFile);
+                    counter--;
+
+                }
+            }
         }
 
         public static void CreatTxtWithFilesDontWant() {
@@ -79,10 +184,9 @@ namespace FolderProcces
 
             var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
 
-            writeFileName(pathRead, pathFileTxt);
-
-
             // Crea txt con el nombre de los archivos leidos
+
+            writeFileName(pathRead, pathFileTxt);
 
 
         }
@@ -161,14 +265,14 @@ namespace FolderProcces
 
             // Lee Archivo delelete.txt existente 
 
-            var txtFiles = Directory.EnumerateFiles(pathRead, "*.txt").FirstOrDefault();
 
-            var pathFiletxt = System.IO.Path.Combine(pathRead);
+            var pathWriteCombine = System.IO.Path.Combine(pathWrite);
 
 
             // Read the file and display it line by line.  
+
             System.IO.StreamReader file =
-                new System.IO.StreamReader(string.Format(@"{0}", pathFiletxt));
+                new System.IO.StreamReader(string.Format(@"{0}", pathWriteCombine));
 
             var dirRead = new List<string>();
 
@@ -190,7 +294,15 @@ namespace FolderProcces
             {
                 Console.WriteLine(string.Format("se encontraron {0} archivos", singleFilesNames.Count()));
 
-                File.WriteAllLines(pathWrite, singleFilesNames);
+                // Compara las listas y encientras las diferencias 
+
+                var result = singleFilesNames.Except(dirRead).ToList();
+
+
+                // guarda resultado en el mismo txt
+
+                File.AppendAllLines(pathWrite, result);
+
             }
             else
             {
@@ -198,8 +310,6 @@ namespace FolderProcces
 
                 Console.ReadLine();
             }
-
-
         }
 
         public static void orderFiles(string sourceFolder, string sourceFile)
