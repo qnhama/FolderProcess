@@ -65,18 +65,21 @@ namespace FolderProcces
 
                     break;
                 case "5":
-                    CreateTxtNameChanelFromTxtFilesDontWant();
+                    Console.WriteLine("Escriba la carpeta de origen");
 
+                    var sourceFolder = System.Console.ReadLine();
+
+                    // Obtiene archvos
+
+                    string pathRead = string.Format(@"{0}", sourceFolder);
+                    var nameFile = "DeleteFiles";
+
+                    var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
+                    CreateTxtNameChanelFromTxtFilesDontWant(pathFileTxt);
                     break;
                 default:
                     break;
             }
-
-
-
-
-
-
 
         }
 
@@ -95,7 +98,6 @@ namespace FolderProcces
             var nameFile = Path.GetFileName(pathRead);
 
             var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
-
 
             writeFileTxtFromFolders(pathRead,
                             pathFileTxt);
@@ -191,40 +193,61 @@ namespace FolderProcces
         /// <summary>
         /// Cada archivo contiene una clave que corresponde al nombre del canal al que pertenece
         /// </summary>
-        public static void CreateTxtNameChanelFromTxtFilesDontWant()
+        public static void CreateTxtNameChanelFromTxtFilesDontWant(string readFileName)
         {
             // lee archivo txt
 
-            Console.WriteLine("Escriba la carpeta de origen");
-
-            var sourceFolder = System.Console.ReadLine();
 
             List<string> dirRead = new List<string>();
 
             try
             {
-                var txtFiles = Directory.EnumerateFiles(sourceFolder, "*.txt");
+                dirRead = readFile(readFileName);
 
-                foreach (string currentFile in txtFiles)
+                if (dirRead.Count == 0)
                 {
-
-                    dirRead = readFile(currentFile);
-
-                    if (dirRead.Count == 0)
-                    {
-                        Console.WriteLine("La lista de nombres del txt esta vacia");
-                    }
-
+                    Console.WriteLine("La lista de nombres del txt esta vacia");
+                }
+                else
+                {
                     // Extrae el nombre del canal de cada archivo leido
 
                     // Tag de busqueda del nombre del archivo
                     var tag = "_";
 
-                    var chanelsNames = getChanelNames(dirRead,tag, tag);
+                    var chanelsNames = getChanelNames(dirRead, tag, tag);
+
+                    // Escribe archivo txt
+
+                    string pathRead = string.Format(@"{0}", readFileName);
+                    var nameFile = "ChanelsNames";
+
+                    var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
+
+                    if (!File.Exists(pathFileTxt))
+                    {
+                        File.WriteAllLines(pathFileTxt, chanelsNames);
+
+                    }
+                    else
+                    {
+                        //lee archivo ya existente
+
+                        var ChanelsNamesTxtFiles = Directory.EnumerateFiles(pathRead, "*.txt");
+
+                        var chanelsNamesReadFiles = readFile(pathFileTxt);
+
+                        // Compara las listas y encientras las diferencias 
+
+                        var result = chanelsNamesReadFiles.Except(chanelsNames).ToList();
+
+                        // guarda resultado en el mismo txt
+
+                        File.AppendAllLines(pathFileTxt, result);
+                    }
 
                 }
 
-                // Escribe un archivo con el nombre de los canales 
 
             }
             catch (Exception e)
@@ -253,7 +276,7 @@ namespace FolderProcces
             try
             {
 
-                if (!Directory.Exists(txtReadPath))
+                if (!File.Exists(txtReadPath))
                 {
                     Console.WriteLine(string.Format("La direccion {0} no existe", txtReadPath));
                 }
@@ -385,17 +408,36 @@ namespace FolderProcces
 
                     var endTagPosition = fileName.LastIndexOf(tagClose);
 
-                    // Obtenemos un substring para encontrar la siguiente ultima posición que corresponde a la posicion del tag de inicio del nombre del archivo
+                    if (endTagPosition == -1)
+                    {
+                        Console.WriteLine(string.Format("No es un archivo con tagClose {0}", fileName));
+                    }
+                    else
+                    {
+                        // Obtenemos un substring para encontrar la siguiente ultima posición que corresponde a la posicion del tag de inicio del nombre del archivo
 
-                    var subFilename = fileName.Substring(0, endTagPosition);
+                        var subFilename = fileName.Substring(0, endTagPosition);
 
-                    var startTagPosition = subFilename.LastIndexOf(tagOpen);
+                        if (string.IsNullOrWhiteSpace(subFilename))
+                        {
+                            Console.WriteLine(string.Format("No fue posible realizar Substring {0}", fileName));
+                        }
 
-                    var lenghtChaneleName = endTagPosition - (startTagPosition + 1);
+                        var startTagPosition = subFilename.LastIndexOf(tagOpen);
 
-                    var nameChanelFile = fileName.Substring(startTagPosition + 1, lenghtChaneleName);
+                        if (startTagPosition == -1)
+                        {
+                            Console.WriteLine(string.Format("No es un archivo con tagStart {0}", fileName));
+                        }
 
-                    chanelNameFiles.Add(nameChanelFile);
+                        var lenghtChaneleName = endTagPosition - (startTagPosition + 1);
+
+                        var nameChanelFile = fileName.Substring(startTagPosition + 1, lenghtChaneleName);
+
+                        chanelNameFiles.Add(nameChanelFile);
+                    }
+
+                    
                 }
 
                 return chanelNameFiles;
@@ -454,11 +496,15 @@ namespace FolderProcces
 
                 // Lee archivos existentes en la carpeta
 
-                string[] files = Directory.GetFiles(pathRead);
+                /// ---------------- Revisar codigo
+
+                List<string> files = Directory.GetFiles(pathRead).Where(f => !f.EndsWith(".txt")).ToList();
+
+                /// ---------------- Revisar codigo
 
                 List<string> singleFilesNames = files.Select(x => Path.GetFileName(x)).ToList();
 
-                if (files.Length > 0)
+                if (files.Count() > 0)
                 {
                     Console.WriteLine(string.Format("se encontraron {0} archivos", singleFilesNames.Count()));
 
