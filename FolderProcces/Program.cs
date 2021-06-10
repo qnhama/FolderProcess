@@ -67,15 +67,8 @@ namespace FolderProcces
                 case "5":
                     Console.WriteLine("Escriba la carpeta de origen");
 
-                    var sourceFolder = System.Console.ReadLine();
-
-                    // Obtiene archvos
-
-                    string pathRead = string.Format(@"{0}", sourceFolder);
-                    var nameFile = "DeleteFiles";
-
-                    var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
-                    CreateTxtNameChanelFromTxtFilesDontWant(pathFileTxt);
+                    
+                    CreateTxtNameChanelFromTxtFilesDontWant();
                     break;
                 default:
                     break;
@@ -193,16 +186,25 @@ namespace FolderProcces
         /// <summary>
         /// Cada archivo contiene una clave que corresponde al nombre del canal al que pertenece
         /// </summary>
-        public static void CreateTxtNameChanelFromTxtFilesDontWant(string readFileName)
+        public static void CreateTxtNameChanelFromTxtFilesDontWant()
         {
             // lee archivo txt
+
+            var sourceFolder = System.Console.ReadLine();
+
+            // Obtiene archvos
+
+            string pathRead = string.Format(@"{0}", sourceFolder);
+            var nameFile = "DeleteFiles";
+
+            var pathDeleteFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
 
 
             List<string> dirRead = new List<string>();
 
             try
             {
-                dirRead = readFile(readFileName);
+                dirRead = readFile(pathDeleteFileTxt);
 
                 if (dirRead.Count == 0)
                 {
@@ -219,13 +221,16 @@ namespace FolderProcces
 
                     // Escribe archivo txt
 
-                    string pathRead = string.Format(@"{0}", readFileName);
-                    var nameFile = "ChanelsNames";
+                    string pathReadChanelsNames = string.Format(@"{0}", pathRead);
+                    nameFile = "ChanelsNames";
 
-                    var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
+                    var pathFileTxt = string.Format(@"{0}\{1}.txt", pathReadChanelsNames, nameFile);
 
                     if (!File.Exists(pathFileTxt))
                     {
+                        using (StreamWriter sw = File.CreateText(pathFileTxt))
+                        {
+                        }
                         File.WriteAllLines(pathFileTxt, chanelsNames);
 
                     }
@@ -233,17 +238,56 @@ namespace FolderProcces
                     {
                         //lee archivo ya existente
 
-                        var ChanelsNamesTxtFiles = Directory.EnumerateFiles(pathRead, "*.txt");
+
+                        var txtFiles = from file in Directory.EnumerateFiles(sourceFolder, "*.txt")
+                            where !file.ToLower().Contains(nameFile)
+                            select file;
 
                         var chanelsNamesReadFiles = readFile(pathFileTxt);
 
-                        // Compara las listas y encientras las diferencias 
+                        foreach (string currentFile in txtFiles)
+                        {
 
-                        var result = chanelsNamesReadFiles.Except(chanelsNames).ToList();
+                            //function call to get the filename
+                            var filename = Path.GetFileName(currentFile);
 
-                        // guarda resultado en el mismo txt
+                            if (filename.Equals(nameFile))
+                            {
+                                var chanelsNamesResult = chanelsNamesReadFiles.Distinct().Except(chanelsNames.Distinct()).ToList();
 
-                        File.AppendAllLines(pathFileTxt, result);
+                                if (chanelsNamesResult.Count() > 0)
+                                {
+                                    // guarda resultado en el mismo txt
+
+                                    File.AppendAllLines(pathFileTxt, chanelsNamesResult);
+                                }
+                            }
+                            else
+                            {
+                                var ReadFiles = readFile(pathFileTxt);
+
+                                // Si en la lista de chanels leidos existen en la lista de los archvos que si son utiles entonces los elimina de la lista de canales no son utiles
+
+                                var result = chanelsNames.Distinct().Except(ReadFiles.Distinct()).ToList();
+
+                                if (result.Count() > 0)
+                                {
+                                    // guarda resultado en el mismo txt
+                                    foreach (var ok in result)
+                                    {
+                                        chanelsNames.Remove(ok);
+                                    }
+
+                                    File.AppendAllLines(pathFileTxt, chanelsNames);
+                                }
+
+                            }
+
+                           
+
+                        }
+
+                      
                     }
 
                 }
