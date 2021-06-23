@@ -16,7 +16,7 @@ namespace FolderProcces
 
             Console.WriteLine("2. ---- Proceso de Orden ----");
 
-            Console.WriteLine("3. Crear txt con archivos no deseados");
+            Console.WriteLine("3. Crear txt con nombre de archivos");
 
             Console.WriteLine("4. Elimina archivos no deseados que se encuentre en el txt Delete archivos");
 
@@ -57,7 +57,7 @@ namespace FolderProcces
 
                     break;
                 case "3":
-                    CreatTxtWithFilesDontWant();
+                    CreatTxtWithNameFiles();
 
                     break;
                 case "4":
@@ -128,7 +128,7 @@ namespace FolderProcces
         // ------ Meunu Select 3 Options ----------
 
 
-        public static void CreatTxtWithFilesDontWant()
+        public static void CreatTxtWithNameFiles()
         {
             Console.WriteLine("Escriba la carpeta de origen");
 
@@ -137,13 +137,14 @@ namespace FolderProcces
             // Obtiene archvos
 
             string pathRead = string.Format(@"{0}", sourceFolder);
-            var nameFile = "DeleteFiles";
-
-            var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
-
+           
             // Crea txt con el nombre de los archivos leidos
 
             Console.WriteLine("Iniciando prooceso de escritura txt de archivos no deseados");
+
+            var pathFileTxt = Directory.GetFiles(pathRead, "*.txt", SearchOption.TopDirectoryOnly).First();
+
+
 
             writeFileName(pathRead, pathFileTxt);
 
@@ -536,13 +537,15 @@ namespace FolderProcces
         {
             try
             {
+
+
                 var dirRead = readFile(pathWrite);
 
                 // Lee archivos existentes en la carpeta
 
                 /// ---------------- Revisar codigo
 
-                List<string> files = Directory.GetFiles(pathRead).Where(f => !f.EndsWith(".txt")).ToList();
+                List<string> files = Directory.GetFiles(pathRead, "*",SearchOption.AllDirectories).Where(f => !f.EndsWith(".txt")).ToList();
 
                 /// ---------------- Revisar codigo
 
