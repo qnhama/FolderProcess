@@ -340,7 +340,7 @@ namespace FolderProcces
                 foreach (var delete in dirRead)
                 {
 
-                    string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", delete), SearchOption.TopDirectoryOnly);
+                    string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", delete), SearchOption.AllDirectories);
 
                     if (files.Length > 0)
                     {
@@ -498,7 +498,7 @@ namespace FolderProcces
 
                 /// ---------------- Revisar codigo
 
-                List<string> files = Directory.GetFiles(pathRead).Where(f => !f.EndsWith(".txt")).ToList();
+                List<string> files = Directory.GetFiles(pathRead,"*", SearchOption.AllDirectories).Where(f => !f.EndsWith(".txt")).ToList();
 
                 /// ---------------- Revisar codigo
 
