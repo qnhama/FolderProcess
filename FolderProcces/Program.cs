@@ -167,9 +167,8 @@ namespace FolderProcces
             try
             {
                 string pathRead = string.Format(@"{0}", sourceFolder);
-                var nameFile = "DeleteFiles";
+                var pathFileTxt = Directory.GetFiles(pathRead, "*.txt", SearchOption.TopDirectoryOnly).First();
 
-                var pathFileTxt = string.Format(@"{0}\{1}.txt", pathRead, nameFile);
 
                 DeleteFiles(sourceFolder, pathFileTxt);
 
@@ -367,35 +366,29 @@ namespace FolderProcces
         {
             try
             {
-                var dirRead = readFile(sourceFile);
+                var dirReads = readFile(sourceFile);
 
-                if (dirRead.Count == 0)
+                if (dirReads.Count == 0)
                 {
                     Console.WriteLine("La lista de nombres del txt esta vacia");
                 }
 
 
-                System.Console.WriteLine("Existe  {0} registros.", dirRead.Count());
+                System.Console.WriteLine("Existe  {0} registros.", dirReads.Count());
 
 
                 Console.WriteLine(string.Format("Buacando Archvos en la carpeta {0}", sourceFolder));
 
-                List<string> filesDelete = new List<string>();
 
-                foreach (var delete in dirRead)
-                {
+                List<string> files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).ToList();
 
-                    string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", delete), SearchOption.AllDirectories);
 
-                    if (files.Length > 0)
-                    {
-                        filesDelete.AddRange(files);
-                    }
-                }
 
-                Console.WriteLine(string.Format("Se encontraron {0}", filesDelete.Count()));
+                files = dirReads.Where(t2 => files.Any(t1 => t2.Contains(t1))).ToList();
+                Console.WriteLine(string.Format("Se encontraron {0}", files.Count()));
 
-                Console.WriteLine(string.Format("¿Estas seguro que quieres eliminar {0} archivos?", filesDelete.Count()));
+
+                Console.WriteLine(string.Format("¿Estas seguro que quieres eliminar {0} archivos?", files.Count()));
 
                 Console.WriteLine("s/n");
 
@@ -403,15 +396,15 @@ namespace FolderProcces
 
                 if (confirmDelete.Equals("s"))
                 {
-                    foreach (var dileDelete in filesDelete)
+                    foreach (var dileDelete in files)
                     {
-                        string pathFile = string.Format(@"{0}", dileDelete);
+
 
                         try
                         {
 
                             //System.IO.File.Copy(pathFile, destinationdirectory);
-                            System.IO.File.Delete(pathFile);
+                            System.IO.File.Delete(dileDelete);
                             //System.IO.File.Delete(pathFile);
 
                         }
@@ -420,7 +413,7 @@ namespace FolderProcces
                             Console.WriteLine(ex.Message);
                             Console.WriteLine(ex.InnerException);
                         }
-                        System.Console.WriteLine(pathFile);
+                        System.Console.WriteLine(dileDelete);
                     }
                 }
             }
