@@ -373,20 +373,17 @@ namespace FolderProcces
                     Console.WriteLine("La lista de nombres del txt esta vacia");
                 }
 
-
                 System.Console.WriteLine("Existe  {0} registros.", dirReads.Count());
-
 
                 Console.WriteLine(string.Format("Buacando Archvos en la carpeta {0}", sourceFolder));
 
+                List<string> deleteFiles = new List<string>();
 
                 List<string> files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).ToList();
 
+                deleteFiles = files.Where(t2 => dirReads.Any(t1 => t2.Contains(t1))).ToList();
 
-
-                files = dirReads.Where(t2 => files.Any(t1 => t2.Contains(t1))).ToList();
                 Console.WriteLine(string.Format("Se encontraron {0}", files.Count()));
-
 
                 Console.WriteLine(string.Format("¿Estas seguro que quieres eliminar {0} archivos?", files.Count()));
 
@@ -396,17 +393,14 @@ namespace FolderProcces
 
                 if (confirmDelete.Equals("s"))
                 {
-                    foreach (var dileDelete in files)
+                    foreach (var dileDelete in deleteFiles)
                     {
-
 
                         try
                         {
-
                             //System.IO.File.Copy(pathFile, destinationdirectory);
                             System.IO.File.Delete(dileDelete);
                             //System.IO.File.Delete(pathFile);
-
                         }
                         catch (Exception ex)
                         {
@@ -421,7 +415,6 @@ namespace FolderProcces
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.InnerException);
-                
             }
         }
 
