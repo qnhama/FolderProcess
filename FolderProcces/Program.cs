@@ -14,13 +14,16 @@ namespace FolderProcces
 
             Console.WriteLine("1. ---- Crear archivo txt con nombre de folders ----");
 
-            Console.WriteLine("2. ---- Proceso de Orden ----");
+            Console.WriteLine("2. ---- Proceso de Orden ---- Nombres cortos");
 
             Console.WriteLine("3. Crear txt con nombre de archivos");
 
             Console.WriteLine("4. Elimina archivos no deseados que se encuentre en el txt Delete archivos");
 
             Console.WriteLine("5. Crea txt con el nombre de los canales de los archivos en un txt");
+
+            Console.WriteLine("6. ---- Proceso de Orden ---- Archivos existentes");
+
 
 
             selectMenu = Console.ReadLine();
@@ -62,13 +65,13 @@ namespace FolderProcces
                     break;
                 case "4":
                     DeleteFilesFromTxtFilesDontWant();
-
                     break;
                 case "5":
                     Console.WriteLine("Escriba la carpeta de origen");
-
-                    
                     CreateTxtNameChanelFromTxtFilesDontWant();
+                    break;
+                case "6":
+                    OrderSuccesFilesFromTxtFiles();
                     break;
                 default:
                     break;
@@ -104,17 +107,29 @@ namespace FolderProcces
         public static void OrderedParallelQuery()
         {
 
+
             Console.WriteLine("Escriba la carpeta de origen");
 
             var sourceFolder = System.Console.ReadLine();
 
+            Console.WriteLine("¿Desea buscar en todas las carpetas?");
 
+            Console.WriteLine("y/n");
+
+            bool SearchOptionSelect = false;
+
+            var SearchOptionRead = System.Console.ReadLine();
+
+            if (SearchOptionRead.Equals("y"))
+            {
+                SearchOptionSelect = true;
+            }
             try
             {
                 var txtFiles = Directory.EnumerateFiles(sourceFolder, "*.txt");
                 foreach (string currentFile in txtFiles)
                 {
-                    orderFiles(sourceFolder, currentFile);
+                    orderFiles(sourceFolder, currentFile, SearchOptionSelect);
                 }
             }
             catch (Exception e)
@@ -137,7 +152,7 @@ namespace FolderProcces
             // Obtiene archvos
 
             string pathRead = string.Format(@"{0}", sourceFolder);
-           
+
             // Crea txt con el nombre de los archivos leidos
 
             Console.WriteLine("Iniciando prooceso de escritura txt de archivos no deseados");
@@ -163,6 +178,19 @@ namespace FolderProcces
 
             var sourceFolder = System.Console.ReadLine();
 
+            Console.WriteLine("¿Desea buscar en todas las carpetas?");
+
+            Console.WriteLine("y/n");
+
+            bool SearchOptionSelect = false;
+
+            var SearchOptionRead = System.Console.ReadLine();
+
+            if (SearchOptionRead.Equals("y"))
+            {
+                SearchOptionSelect = true;
+            }
+
 
             try
             {
@@ -170,7 +198,7 @@ namespace FolderProcces
                 var pathFileTxt = Directory.GetFiles(pathRead, "*.txt", SearchOption.TopDirectoryOnly).First();
 
 
-                DeleteFiles(sourceFolder, pathFileTxt);
+                DeleteFiles(sourceFolder, pathFileTxt, SearchOptionSelect);
 
             }
             catch (Exception e)
@@ -240,8 +268,8 @@ namespace FolderProcces
 
 
                         var txtFiles = from file in Directory.EnumerateFiles(sourceFolder, "*.txt")
-                            where !file.ToLower().Contains(nameFile)
-                            select file;
+                                       where !file.ToLower().Contains(nameFile)
+                                       select file;
 
                         var chanelsNamesReadFiles = readFile(pathFileTxt);
 
@@ -283,11 +311,11 @@ namespace FolderProcces
 
                             }
 
-                           
+
 
                         }
 
-                      
+
                     }
 
                 }
@@ -300,6 +328,98 @@ namespace FolderProcces
                 Console.WriteLine(e.InnerException);
             }
 
+
+        }
+
+
+        // ------ Meunu Select 6 Options ----------
+
+
+        /// <summary>
+        /// mediante un txt es posible gaurdar registro de los archivos eliminados
+        /// </summary>
+        public static void OrderSuccesFilesFromTxtFiles()
+        {
+            Console.WriteLine("Escriba la carpeta de origen");
+
+            var sourceFolder = System.Console.ReadLine();
+
+            Console.WriteLine("¿Desea buscar en todas las carpetas?");
+
+            Console.WriteLine("y/n");
+
+            bool SearchOptionSelect = false;
+
+            var SearchOptionRead = System.Console.ReadLine();
+
+            if (SearchOptionRead.Equals("y"))
+            {
+                SearchOptionSelect = true;
+            }
+
+            try
+            {
+                string pathRead = string.Format(@"{0}", sourceFolder);
+                var pathFileTxt = Directory.GetFiles(pathRead, "*.txt", SearchOption.TopDirectoryOnly).First();
+
+                List<string> files  = getFilesExistInTxt(sourceFolder, pathFileTxt, SearchOptionSelect);
+
+                Console.WriteLine("Se encontraron {0}", files.Count);
+
+                Console.ReadLine();
+
+                //Crea carpeta con nombre del archivo
+                var newDestination = System.IO.Path.Combine(sourceFolder, Path.ChangeExtension(pathFileTxt, null));
+
+
+                foreach (var fileMove in files)
+                {
+                    string pathString = newDestination;
+                    string pathFile = string.Format(@"{0}", fileMove);
+                    string fileName = Path.GetFileName(fileMove);
+                    string originDirectory = System.IO.Path.Combine(string.Format(@"{0}", pathString), fileName);
+                    string destinationdirectory = System.IO.Path.Combine(string.Format(@"{0}", pathString), fileName);
+
+                    try
+                    {
+                        if (!Directory.Exists(pathString))
+                        {
+                            System.IO.Directory.CreateDirectory(pathString);
+                        }
+
+                        //System.IO.File.Copy(pathFile, destinationdirectory);
+                        System.IO.File.Move(pathFile, destinationdirectory, true);
+                        //System.IO.File.Delete(pathFile);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    System.Console.WriteLine(fileName);
+
+                }
+
+                Console.WriteLine("¿Desea Eliminar las carpetas vacias?");
+
+                Console.WriteLine("y/n");
+
+                var delateEmptyDirectoriesSelect = System.Console.ReadLine();
+
+                if (delateEmptyDirectoriesSelect.Equals("y"))
+                {
+                    DeleteEmptyDirectories(pathRead);
+                }
+
+                Console.WriteLine("Termino el proceso");
+                Console.ReadLine();
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.InnerException);
+            }
 
         }
 
@@ -362,30 +482,15 @@ namespace FolderProcces
         /// </summary>
         /// <param name="sourceFolder"></param>
         /// <param name="sourceFile"></param>
-        public static void DeleteFiles(string sourceFolder, string sourceFile)
+        public static void DeleteFiles(string sourceFolder, string sourceFile, bool SearchOptionAllDirectories)
         {
             try
             {
-                var dirReads = readFile(sourceFile);
+                List<string> deleteFiles = getFilesExistInTxt(sourceFolder, sourceFile, SearchOptionAllDirectories);
 
-                if (dirReads.Count == 0)
-                {
-                    Console.WriteLine("La lista de nombres del txt esta vacia");
-                }
+                Console.WriteLine(string.Format("Se encontraron {0}", deleteFiles.Count()));
 
-                System.Console.WriteLine("Existe  {0} registros.", dirReads.Count());
-
-                Console.WriteLine(string.Format("Buacando Archvos en la carpeta {0}", sourceFolder));
-
-                List<string> deleteFiles = new List<string>();
-
-                List<string> files = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).ToList();
-
-                deleteFiles = files.Where(t2 => dirReads.Any(t1 => t2.Contains(t1))).ToList();
-
-                Console.WriteLine(string.Format("Se encontraron {0}", files.Count()));
-
-                Console.WriteLine(string.Format("¿Estas seguro que quieres eliminar {0} archivos?", files.Count()));
+                Console.WriteLine(string.Format("¿Estas seguro que quieres eliminar {0} archivos?", deleteFiles.Count()));
 
                 Console.WriteLine("s/n");
 
@@ -416,6 +521,57 @@ namespace FolderProcces
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.InnerException);
             }
+        }
+
+        public static List<string>getFilesExistInTxt(string sourceFolder, string sourceFile, bool SearchOptionAllDirectories)
+        {
+            List<string> FilesExistInTxt = new List<string>();
+
+            var dirReads = readFile(sourceFile);
+
+            if (dirReads.Count == 0)
+            {
+                Console.WriteLine("La lista de nombres del txt esta vacia");
+            }
+
+            System.Console.WriteLine("Existe  {0} registros.", dirReads.Count());
+
+            Console.WriteLine(string.Format("Buacando Archvos en la carpeta {0}", sourceFolder));
+
+            SearchOption SearchOptionSelect = SearchOption.TopDirectoryOnly;
+
+            if (SearchOptionAllDirectories)
+            {
+                SearchOptionSelect = SearchOption.AllDirectories;
+            }
+
+            List<string> files = Directory.GetFiles(sourceFolder, "*", SearchOptionSelect).ToList();
+
+            
+            //foreach (var file in files)
+            //{
+            //    foreach (var dirRead in dirReads)
+            //    {
+            //        if (file.Contains(dirRead))
+            //        {
+            //            FilesExistInTxt.Add(file);
+            //        }
+            //    }
+            //}
+
+            foreach (var dirRead in dirReads)
+            {
+                var match = files
+                            .FirstOrDefault(stringToCheck => stringToCheck.Contains(dirRead));
+
+                if (match != null)
+                {
+                    FilesExistInTxt.Add(match);
+                }
+            }
+            
+
+            return FilesExistInTxt;
         }
 
         /// <summary>
@@ -573,7 +729,7 @@ namespace FolderProcces
         /// <param name="sourceFolder"></param>
         /// <param name="sourceFile"></param>
 
-        public static void orderFiles(string sourceFolder, string sourceFile)
+        public static void orderFiles(string sourceFolder, string sourceFile, bool SearchOptionAllDirectories)
         {
             try
             {
@@ -595,10 +751,17 @@ namespace FolderProcces
 
                 Console.WriteLine(string.Format("Acomodando Archvos de {0} en subcarpetas", pathFiletxt));
 
+
+                SearchOption SearchOptionSelect = SearchOption.TopDirectoryOnly;
+
+                if (SearchOptionAllDirectories)
+                {
+                    SearchOptionSelect = SearchOption.AllDirectories;
+                }
                 foreach (var phFolder in dirRead)
                 {
 
-                    string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", phFolder), SearchOption.TopDirectoryOnly);
+                    string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", phFolder), SearchOptionSelect);
 
                     if (files.Length > 0)
                     {
@@ -636,6 +799,25 @@ namespace FolderProcces
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.InnerException);
+            }
+
+        }
+
+        public static void DeleteEmptyDirectories(string path)
+
+        {
+            if (Directory.Exists(path))
+            {
+                //Delete all child Directories if they are empty
+                foreach (string subdirectory in Directory.GetDirectories(path, "*.*", SearchOption.AllDirectories))
+
+                {
+                    string[] file = Directory.GetFiles(subdirectory, "*.*");
+
+                    if (file.Length == 0)
+                        Directory.Delete(subdirectory);
+                }
+
             }
 
         }
