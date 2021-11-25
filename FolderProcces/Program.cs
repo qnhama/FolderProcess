@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using WMPLib;
+
 
 namespace FolderProcces
 {
@@ -112,24 +114,40 @@ namespace FolderProcces
 
             var sourceFolder = System.Console.ReadLine();
 
+            bool SearchOptionSelect = false;
+
             Console.WriteLine("¿Desea buscar en todas las carpetas?");
 
             Console.WriteLine("y/n");
-
-            bool SearchOptionSelect = false;
 
             var SearchOptionRead = System.Console.ReadLine();
 
             if (SearchOptionRead.Equals("y"))
             {
                 SearchOptionSelect = true;
+
+            }
+
+            bool orderByAuthor = false;
+
+            Console.WriteLine("¿Deseas buscar por nombre de Autor?");
+
+            Console.WriteLine("y/n");
+
+            var orderByAuthornRead = System.Console.ReadLine();
+
+            if (orderByAuthornRead.Equals("y"))
+            {
+                orderByAuthor = true;
+
             }
             try
             {
                 var txtFiles = Directory.EnumerateFiles(sourceFolder, "*.txt");
                 foreach (string currentFile in txtFiles)
                 {
-                    orderFiles(sourceFolder, currentFile, SearchOptionSelect);
+                    orderFiles(orderByAuthor, sourceFolder, 
+                        currentFile, SearchOptionSelect);
                 }
             }
             catch (Exception e)
@@ -729,28 +747,17 @@ namespace FolderProcces
         /// <param name="sourceFolder"></param>
         /// <param name="sourceFile"></param>
 
-        public static void orderFiles(string sourceFolder, string sourceFile, bool SearchOptionAllDirectories)
+        public static void orderFiles(bool orderByAuthor, string sourceFolder, string sourceFile, bool SearchOptionAllDirectories)
         {
             try
             {
                 var pathFiletxt = System.IO.Path.Combine(sourceFile);
 
-
                 var dirRead = readFile(sourceFile);
 
-
-                System.Console.WriteLine("There were {0} lines.", dirRead.Count);
-
-                //Crea carpeta con nombre del archivo
                 var newDestination = System.IO.Path.Combine(sourceFolder, Path.ChangeExtension(pathFiletxt, null));
 
-                if (!Directory.Exists(sourceFolder))
-                {
-                    System.IO.Directory.CreateDirectory(sourceFolder);
-                }
-
-                Console.WriteLine(string.Format("Acomodando Archvos de {0} en subcarpetas", pathFiletxt));
-
+                 Console.WriteLine(string.Format("Acomodando Archvos de {0} en subcarpetas", pathFiletxt));
 
                 SearchOption SearchOptionSelect = SearchOption.TopDirectoryOnly;
 
@@ -758,47 +765,151 @@ namespace FolderProcces
                 {
                     SearchOptionSelect = SearchOption.AllDirectories;
                 }
-                foreach (var phFolder in dirRead)
+
+                if (orderByAuthor)
                 {
 
-                    string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", phFolder), SearchOptionSelect);
+                    var resultChanels = orderByAutor(sourceFolder, newDestination, SearchOptionSelect);
 
-                    if (files.Length > 0)
-                    {
-                        foreach (var fileMove in files)
-                        {
-                            string pathString = System.IO.Path.Combine(newDestination, phFolder);
-                            string pathFile = string.Format(@"{0}", fileMove);
-                            string fileName = Path.GetFileName(fileMove);
-                            string destinationdirectory = System.IO.Path.Combine(string.Format(@"{0}", pathString), fileName);
+                    // Compara la lista de canales de archivos encontrados
 
-                            try
-                            {
-                                if (!Directory.Exists(pathString))
-                                {
-                                    System.IO.Directory.CreateDirectory(pathString);
-                                }
+                    var canalesEncontrados = resultChanels.Except(dirRead).ToList();
 
-                                //System.IO.File.Copy(pathFile, destinationdirectory);
-                                System.IO.File.Move(pathFile, destinationdirectory, true);
-                                //System.IO.File.Delete(pathFile);
+                    // guarda resultado en el mismo txt
 
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                            }
-                            System.Console.WriteLine(fileName);
-
-                        }
-
-                    }
+                    File.AppendAllLines(sourceFile, canalesEncontrados);
                 }
+                else
+                {
+
+                   
+
+                    System.Console.WriteLine("There were {0} lines.", dirRead.Count);
+
+                    //Crea carpeta con nombre del archivo
+
+                    if (!Directory.Exists(sourceFolder))
+                    {
+                        System.IO.Directory.CreateDirectory(sourceFolder);
+                    }
+
+
+                    foreach (var phFolder in dirRead)
+                    {
+                        orderByNameFile(sourceFolder, phFolder, newDestination, SearchOptionSelect);
+                    }
+
+                }
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.InnerException);
+            }
+
+        }
+
+        /// <summary>
+        /// Utiliza la libreria WMPLib para obtener los detalles de cada archivo para comparar el autor
+        /// </summary>
+        /// <param name="sourceFolder"></param>
+        /// <param name="phFolder"></param>
+        /// <param name="newDestination"></param>
+        private static List<string> orderByAutor(string sourceFolder, string newDestination,
+            SearchOption SearchOptionSelect)
+        {
+            List<string> canalesEncontrados = new List<string>();
+
+            // Obtiene todos los archivos e identifica el nombre del autor para ordenarlo
+
+            List<string> AllFiles = Directory.GetFiles(sourceFolder, "*", SearchOptionSelect).Where(f => !f.EndsWith(".txt")).ToList();
+
+            if (AllFiles.Count > 0)
+            {
+                foreach (var fileSearch in AllFiles)
+                {
+                    WMPLib.WindowsMediaPlayer player = new WMPLib.WindowsMediaPlayer();
+
+                    WMPLib.IWMPMedia m = player.newMedia(fileSearch);
+
+                    var autor = m.getItemInfo("Author");
+
+                    string pathString = System.IO.Path.Combine(newDestination, autor);
+
+                    string pathFile = string.Format(@"{0}", fileSearch);
+                    string fileName = Path.GetFileName(fileSearch);
+                    string destinationdirectory = System.IO.Path.Combine(string.Format(@"{0}", pathString), fileName);
+
+                    try
+                    {
+                        if (!Directory.Exists(pathString))
+                        {
+                            System.IO.Directory.CreateDirectory(pathString);
+                        }
+
+
+                        //System.IO.File.Copy(pathFile, destinationdirectory);
+                        System.IO.File.Move(pathFile, destinationdirectory, true);
+                        //System.IO.File.Delete(pathFile);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    
+
+                    canalesEncontrados.Add(autor);
+                }
+            }
+
+            return canalesEncontrados.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// Cada nombre de archivo es comparado con los nombres almacenados en el archivo
+        /// </summary>
+        /// <param name="sourceFolder"></param>
+        /// <param name="phFolder"></param>
+        /// <param name="newDestination"></param>
+        /// <param name="SearchOptionSelect"></param>
+        private static void orderByNameFile(string sourceFolder, string phFolder, 
+            string newDestination, SearchOption SearchOptionSelect)
+        {
+
+            string[] files = Directory.GetFiles(sourceFolder, string.Format("*{0}*", phFolder), SearchOptionSelect);
+
+            if (files.Length > 0)
+            {
+                foreach (var fileMove in files)
+                {
+                    string pathString = System.IO.Path.Combine(newDestination, phFolder);
+                    string pathFile = string.Format(@"{0}", fileMove);
+                    string fileName = Path.GetFileName(fileMove);
+                    string destinationdirectory = System.IO.Path.Combine(string.Format(@"{0}", pathString), fileName);
+
+                    try
+                    {
+                        if (!Directory.Exists(pathString))
+                        {
+                            System.IO.Directory.CreateDirectory(pathString);
+                        }
+
+
+                        //System.IO.File.Copy(pathFile, destinationdirectory);
+                        System.IO.File.Move(pathFile, destinationdirectory, true);
+                        //System.IO.File.Delete(pathFile);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    System.Console.WriteLine(fileName);
+
+                }
+
             }
 
         }
